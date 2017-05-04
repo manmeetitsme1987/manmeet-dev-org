@@ -1,0 +1,17 @@
+<apex:page applyHtmlTag="false" applyBodyTag="false" showHeader="false">
+<html>
+<head>
+<script type="text/javascript" src="https://assets.yammer.com/assets/platform_embed.js"></script>
+</head>
+
+<body>
+    <div id="embedded-feed" style="height:800px;width:400px;"></div>
+<script type="text/javascript"> yam.connect.embedFeed({ 
+	container: "#embedded-feed",
+	network: "appirio.com",
+	feedType: "group",
+	feedId: "1037858"});
+</script>
+</body>
+</html>
+</apex:page>

@@ -1,0 +1,50 @@
+<apex:page controller="SetCustomObjectPermissions">
+{!profileList}
+
+	<apex:form >
+		<apex:SelectList value="{!selecteObject}" size="1">
+			<apex:selectOptions value="{!objectNames}"></apex:selectOptions>
+		</apex:SelectList>
+	</apex:form>
+
+<script>
+	HTTP h = new HTTP();
+HTTPRequest req = new HTTPRequest();
+req.setMethod('POST');
+req.setHeader('Content-Type', 'text/xml');
+req.setHeader('SOAPAction', 'create');
+
+String b = '<?xml version="1.0" encoding="UTF-8"?>';
+b += '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">';
+b += '<soapenv:Header>';
+b += '<ns1:SessionHeader soapenv:mustUnderstand="0" xmlns:ns1="http://soap.sforce.com/2006/04/metadata">';
+b += '<ns1:sessionId>' + UserInfo.getSessionId() + '</ns1:sessionId>';
+b += '</ns1:SessionHeader>';
+b += '</soapenv:Header>';
+b += '<soapenv:Body>';
+b += '<create xmlns="http://soap.sforce.com/2006/04/metadata">';
+b += '<metadata xsi:type="ns2:CustomObject" xmlns:ns2="http://soap.sforce.com/2006/04/metadata">';
+b += '<fullName>sample__c</fullName>';
+b += '<deploymentStatus>Deployed</deploymentStatus>';
+b += '<description>created by the Metadata API</description>';
+b += '<enableActivities>true</enableActivities>';
+b += '<label>sample Object</label>';
+b += '<nameField>';
+b += '<displayFormat>AN-{0000}</displayFormat>';
+b += '<label>sample__c Name</label>';
+b += '<type>AutoNumber</type>';
+b += '</nameField>';
+b += '<pluralLabel>sample Objects</pluralLabel>';
+b += '<sharingModel>ReadWrite</sharingModel>';
+b += '</metadata>';
+b += '</create>';
+b += '</soapenv:Body>';
+b += '</soapenv:Envelope>';
+
+req.setBody(b);
+req.setCompressed(false);
+req.setEndpoint('https://na12-api.salesforce.com/services/Soap/m/25.0');
+HTTPResponse resp = h.send(req);
+System.debug(resp.getBody());
+</script>
+</apex:page>

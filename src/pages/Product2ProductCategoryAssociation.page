@@ -1,0 +1,132 @@
+<apex:page controller="ProductCategoryAssociationController" id="pg">
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	<apex:sectionHeader title="Product Category Maintenance"/>
+	<apex:form id="frm">
+	<apex:outputpanel >
+            <apex:actionstatus id="status">
+                <apex:facet name="start">
+                    <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;
+                           height: 100%;opacity:0.65;width:100%;"> 
+                        <div class="waitingHolder" style="width: 91px;">
+                            <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                            <span class="waitingDescription">Please Wait...</span>
+                        </div>
+                    </div>
+                </apex:facet>
+            </apex:actionstatus>
+       </apex:outputpanel>
+		<apex:actionfunction name="fetchAssociatedProduct" action="{!fetchAssociatedProduct}" reRender="products" status="status">
+			<apex:param name="categoryId"
+                value=""
+                assignto="{!selectedObjId}" />
+		</apex:actionfunction>
+		<apex:pageBlock title="" id="pageBlock" mode="edit" > 
+		<apex:inputHidden id="categoryId" value="{!selectedObjId}"/>
+		<apex:pageBlockButtons location="bottom">
+           <apex:commandButton value="Save"  action="{!save}" />
+		</apex:pageBlockButtons>
+		 <apex:pageMessages /> 
+		 <apex:outputLabel value="View" style="margin-right: 20px;font-weight:bold;margin-left:10px;"/>
+		 <apex:selectList value="{!selectedView}" multiselect="false" size="1">
+            <apex:selectOptions value="{!ViewOptions}"/>
+            <apex:actionSupport event="onchange" reRender="pageBlock" action="{!fetchProductsData}"  status="statusList" />
+        </apex:selectList>
+        <apex:actionstatus id="statusList">
+                                <apex:facet name="start">
+                                    <img src="/img/loading.gif" />&nbsp;Working...
+                                        </apex:facet>
+                            </apex:actionstatus>
+			<apex:outputLabel value="Search SKU" style="margin-right: 20px;font-weight:bold;margin-left:10px;"/>
+			<apex:inputText value="{!searchString}" id="searchString"/>
+			<apex:commandButton value="Search" action="{!filterProducts}" rerender="pageBlock" status="status"/>
+         <br/>
+         <br/>
+         <apex:outputPanel rendered="{!selectedView == '0'}">
+			<table width="100%" border="0" cellpadding="0" cellspacing="0">
+				<tr>
+					<td style="width : 50%;vertical-align:top;padding-top: 1px;">
+					<div class="firstDiv"> 
+					<apex:pageblockSection columns="1" title="Products" id="treeView" >
+							
+						<apex:repeat value="{!listCategoriesOrProducts}" var="upperItem"> 
+							<apex:pageBlockTable value="{!upperItem}" var="item">
+								<apex:column headerValue="Select">
+					               <apex:inputCheckbox value="{!item.isSelected}"/>
+					            </apex:column> 
+								<apex:column value="{!item.obj['Part_Number__c']}"/>
+								<apex:column value="{!item.obj['Description']}"/> 
+							 </apex:pageBlockTable>
+						 </apex:repeat>	
+						 
+					</apex:pageblockSection>
+					</div> 
+				     </td>
+			    	<td style="width : 50%;vertical-align:top;">
+			    	<div style="margin-top:-15px;" id="secondDiv"> 
+			    	<apex:pageblockSection columns="1" title="Associate With" id="pbSection">
+						<c:TreeViewForManualCreation ObjectNameValue="Support_Product__c" SelectedCategoryValue="all" forPage="CaseWizard" counter="1" hiddenFieldName="pg:frm:pageBlock:categoryId"/>
+			    	</apex:pageblockSection>
+			    	
+			    	</div>
+					</td>
+				</tr></table>
+			</apex:outputPanel>
+			<apex:outputPanel rendered="{!selectedView == '1'}">
+					<div class="firstDiv"> 
+					<apex:pageblockSection columns="1" title="Products" >
+							
+						<apex:repeat value="{!listCategoriesOrProducts}" var="upperItem"> 
+							<apex:pageBlockTable value="{!upperItem}" var="item">
+								<apex:column value="{!item.obj['Part_Number__c']}"/>
+								<apex:column value="{!item.obj['Description']}"/> 
+								<apex:column value="{!item.obj['Support_Product__c']}"/>
+							 </apex:pageBlockTable>
+						 </apex:repeat>	
+						 
+					</apex:pageblockSection>
+					</div> 
+			</apex:outputPanel>
+			<apex:outputPanel rendered="{!selectedView == '2'}">
+					<table width="100%" border="0" cellpadding="0" cellspacing="0">
+				<tr>
+					<td style="width : 50%;vertical-align:top;">
+					<div id="secondDiv"> 
+			    	<apex:pageblockSection columns="1" title="Associate With" id="pbSection1">
+						<c:TreeViewForManualCreation ObjectNameValue="Support_Product__c" SelectedCategoryValue="all" forPage="CaseWizard" counter="2" selectItemCallback="fetchAssociatedProduct"/>
+			    	</apex:pageblockSection>
+			    	
+			    	</div>
+					
+				     </td>
+			    	<td style="width : 50%;vertical-align:top;">
+			    	<div class="firstDiv" style="margin-top:-16px;" > 
+					<apex:pageblockSection columns="1" title="Products" id="treeView1" >
+					<apex:outputPanel id="products">
+							<apex:outputPanel rendered="{!listCategoriesOrProducts.size == 0}">
+								<div style="background-color:#dbdbdb;height:50px;padding-top: 25px;text-align:center;margin-top: 20px;"><b>Select Category to see related Products.</b></div>
+							</apex:outputPanel>
+						<apex:repeat value="{!listCategoriesOrProducts}" var="upperItem"> 
+						<apex:outputPanel rendered="{!upperItem.size == 0}">
+								<div style="background-color:#dbdbdb;height:50px;padding-top: 25px;text-align:center;margin-top: 20px;"><b>No Related Products found.</b></div>
+							</apex:outputPanel>
+							<apex:pageBlockTable value="{!upperItem}" var="item" rendered="{!upperItem.size != 0}">
+								<apex:column value="{!item.obj['Part_Number__c']}"/>
+								<apex:column value="{!item.obj['Description']}"/> 
+							 </apex:pageBlockTable>
+						 </apex:repeat>	
+						 </apex:outputPanel>
+					</apex:pageblockSection>
+					</div> 
+					</td>
+				</tr></table>
+			</apex:outputPanel>
+				<script>
+							jQuery('.firstDiv .pbSubsection').css('overflow','auto');
+							jQuery('.firstDiv .pbSubsection').css('height','400px');
+							jQuery('#secondDiv .pbSubsection').css('overflow','auto');
+							jQuery('#secondDiv .pbSubsection').css('height','400px');
+						</script>
+		 </apex:pageBlock>
+		  
+	</apex:form>
+</apex:page>

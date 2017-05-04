@@ -1,0 +1,21 @@
+<apex:page docType="html-5.0" showHeader="false" sidebar="false" standardStylesheets="false" applyBodyTag="false" applyHtmlTag="false">
+  <html ng-app="App">
+    <head>
+         <link href="{!URLFOR($Resource.My_First_Angular_App, 'bower_components/bootstrap/dist/css/bootstrap.min.css')}" rel="stylesheet" type="text/css"/>
+         <link href="{!URLFOR($Resource.My_First_Angular_App, 'css/screen.css')}" rel="stylesheet" type="text/css"/>
+         <title>My First Angular App</title>
+        <script>
+           var SITE_PREFIX = "{!$Resource.My_First_Angular_App}/";
+        </script>
+    </head>
+    <body >
+        <script src="{!URLFOR($Resource.My_First_Angular_App, 'bower_components/angularjs/angular.min.js')}"></script>
+        <script src="{!URLFOR($Resource.My_First_Angular_App, 'js/app.js')}"></script>
+        <p>{{"hello" + " Manmeet"}}</p>
+        <div ng-controller="Controller1 as ctrl1">
+            <h1>{{ctrl1.product.name}}</h1>
+            <h1>{{ctrl1.product.designation}}</h1>
+        </div>
+    </body>
+    </html>
+</apex:page>

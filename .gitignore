@@ -1,0 +1,17 @@
+.DS_Store
+translations
+objectTranslations
+*.sublime-*
+*.project
+.classpath
+.settings
+.settings/*
+*.classpath
+*.sh
+config/*
+debug/*
+deploy/*
+apex-scripts/*
+salesforce.schema
+Referenced\ Packages/
+tags

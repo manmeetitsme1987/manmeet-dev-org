@@ -1,0 +1,25 @@
+<apex:page >
+    <script src="{!URLFOR($Resource.forcetk, 'jquery-3.1.0.min.js')}"></script>
+    
+    <script src="{!URLFOR($Resource.forcetk, 'forcetk.mobilesdk.js')}" ></script>
+    <script type="text/javascript">
+        // Get a reference to jQuery 
+        // that we can work with
+        $j = jQuery.noConflict();
+ 
+        // Get an instance of the REST API client 
+        // and set the session ID
+        var client = new forcetk.Client();
+        client.setSessionToken(
+            '{!$Api.Session_ID}');
+ 
+        client.query(
+            "SELECT Name FROM Account LIMIT 1", 
+            function(response){
+                $j('#accountname').html(
+                    response.records[0].Name);
+        });
+    </script>
+    <p>The first account I see is 
+        <span id="accountname"></span>.</p>
+</apex:page>

@@ -1,0 +1,80 @@
+<apex:page standardController="Case" extensions="CaseViewController">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<apex:form >
+<table width="100%">
+    <tr>
+        <td style="width:100%;vertical-align:top;">
+        <apex:pageBlock >
+            <apex:actionFunction name="attachCaseAction" action="{!attachCase}" oncomplete="window.parent.location.reload();"/>
+            <div style="width:100%; height:40px; background-color:#99a3ac; color:white;font-weight: bold;font-size: 120%;">
+                <img src="/img/knowledge/knowledge32.png" class="pageTitleIcon" title="Article" alt="Article"/>
+                <h1 class="pageType noSecondHeader">Suggested Articles</h1>
+            </div>
+            <br/>
+            <img src="/img/knowledge/checkbox_arrow.png" alt="" width="9" height="8" style="margin: 4px 3px 0px 6px;padding-left: 15px;" title=""/>&nbsp;
+            <apex:commandButton value="Attach Case" onclick="checkForCheckBoxes(); return false;" />
+<!--            <apex:commandButton value="Refresh" onclick="window.parent.location.reload();"/>-->
+            <br/><br/>
+                <div id="firstDiv"> 
+                        <apex:pageBlockTable value="{!listArticleCategories}" var="item">
+                        <apex:column >
+                            <apex:facet name="header">
+                                <input type="checkbox" id="selectall"/> Action
+                              </apex:facet>
+                           <apex:inputCheckbox value="{!item.isSelected}" rendered="{!!item.isAlreadyPresent}" styleClass="case"/>
+                        </apex:column>
+                         
+                        <apex:column headerValue="Article Title">
+                            <apex:outputLink value="/{!item.article.Article_Id__c}"><apex:outputText value="{!item.article.Article_Title__c}" /></apex:outputLink> 
+                        </apex:column> 
+                        <apex:column headerValue="Status">
+                            <apex:outputText value="Already Attached"  rendered="{!item.isAlreadyPresent}" />
+                        </apex:column>
+                     </apex:pageBlockTable>
+                </div>
+            <script>
+                $('#firstDiv .pbSubsection').css('overflow','auto');
+                $('#firstDiv .pbSubsection').css('height','500px');
+            </script>
+        </apex:pageBlock>
+        </td>
+    </tr> 
+
+ </table>
+ <SCRIPT language="javascript">
+$(function(){
+ 
+    // add multiple select / deselect functionality
+    $("#selectall").click(function () {
+          $('.case').prop('checked', this.checked);
+    });
+ 
+    // if all checkbox are selected, check the selectall checkbox
+    // and viceversa
+    $(".case").click(function(){
+ 
+        if($(".case").length == $(".case:checked").length) {
+            $("#selectall").prop("checked", true);
+        } else {
+            $("#selectall").removeProp("checked");
+        }
+ 
+    });
+});
+
+function checkForCheckBoxes(){
+    isSelectedAtLeastOne = false;
+    $('input:checkbox.case').each(function () {
+       if(this.checked){
+           isSelectedAtLeastOne = true;
+       }
+    });
+    if(isSelectedAtLeastOne){
+        attachCaseAction();
+    }else{
+        alert("Please select atleast one article");
+    }
+}
+</SCRIPT>
+ </apex:form>
+</apex:page>

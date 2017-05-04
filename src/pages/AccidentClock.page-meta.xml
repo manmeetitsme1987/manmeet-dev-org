@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ApexPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>36.0</apiVersion>
+    <availableInTouch>true</availableInTouch>
+    <confirmationTokenRequired>false</confirmationTokenRequired>
+    <label>AccidentClock</label>
+    <packageVersions>
+        <majorNumber>2</majorNumber>
+        <minorNumber>424</minorNumber>
+        <namespace>CRMG_GTM</namespace>
+    </packageVersions>
+    <packageVersions>
+        <majorNumber>1</majorNumber>
+        <minorNumber>11</minorNumber>
+        <namespace>CRMG_STRP</namespace>
+    </packageVersions>
+</ApexPage>

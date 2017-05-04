@@ -1,0 +1,498 @@
+<apex:page controller="ProblemSolutionAssociationController" id="pg">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	<apex:sectionHeader title="Category Maintenance"/>
+	<apex:form id="frm">
+	<apex:inputHidden id="solutionSelectedIds" value="{!selectedSolutionIdsToAdd}"/>
+	<apex:inputHidden id="problemSelectedids" value="{!selectedProblemIdsToAdd}"/>
+	
+	
+	<apex:actionFunction action="{!hideLightBoxAction}" name="hideLightBoxAction" rerender="frm" status="status" />
+	<apex:actionFunction action="{!addCategories}" name="addCategoriesAction" rerender="frm" status="status" />
+	<apex:actionFunction action="{!processDMLOperation}" name="processDMLOperationAction" rerender="treeView" status="status" oncomplete="showLightBox('light', 'fade');">
+		<apex:param name="selectedDMLType" value="" assignTo="{!selectedDMLType}" />
+	</apex:actionFunction>
+	<apex:actionFunction action="{!addCategories}" name="delCategoriesAction" rerender="frm" status="status" >
+		<apex:param name="selectedDMLType" value="" assignTo="{!selectedDMLType}" />
+	</apex:actionFunction>
+    <apex:actionFunction action="{!fetchData}" name="fetchDataForSelectedType" rerender="pageBlock" status="status" />    
+     <apex:actionFunction action="{!deleteProblemSolution}" name="deleteProblemSolutionJunction" rerender="pnlProblem, pnlSolutions" status="status">
+	   <apex:param name="selectedProblemId" value="" assignTo="{!selectedJunctionId}" />
+    </apex:actionFunction>
+    <apex:actionFunction action="{!deleteTranslationAction}" name="deleteTranslationAction" rerender="frm" status="status" >
+		<apex:param name="firstParam" value="" assignTo="{!selectedTranslationId}" />
+	</apex:actionFunction>
+	<apex:actionFunction action="{!editTranslationAction}" name="editTranslationAction" rerender="translation" status="status" oncomplete="showLightBox('light3','fade3');">
+		<apex:param name="firstParam" value="" assignTo="{!selectedTranslationId}" />
+	</apex:actionFunction>
+    <apex:actionFunction action="{!fetchSolutionsData}" name="fetchSolutions" rerender="solutions, message, hiddenPanel" status="status">
+    	<apex:param name="categoryId"
+                value=""
+                assignto="{!selectedProblemCategoryId}" />
+    </apex:actionFunction>
+    
+    <apex:actionFunction action="{!fetchTranslationsData}" name="fetchTranslations" rerender="products, message, hiddenPanel" status="status">
+    	<apex:param name="categoryId"
+                value=""
+                assignto="{!selectedProductCategoryId}" />
+    </apex:actionFunction>
+    <apex:outputPanel id="hiddenPanel">
+    	<apex:inputHidden id="problemCategoryId" value="{!selectedProblemCategoryId}"/>
+    	<apex:inputHidden id="solutionCategoryId" value="{!selectedSolutionCategoryId}"/>
+    	<apex:inputHidden id="productCategoryId" value="{!selectedProductCategoryId}"/>
+    </apex:outputPanel>
+	<apex:actionFunction action="{!showAddSolutionPanel}" name="showAddSolutionPanel" rerender="treeView2" status="status" oncomplete="showLightBox('light2','fade2');"/>
+	<apex:actionFunction action="{!saveNewSolution}" name="saveNewSolution" rerender="frm, treeView2" status="status"/>
+	<apex:outputpanel >
+            <apex:actionstatus id="status">
+                <apex:facet name="start">
+                    <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;
+                           height: 100%;opacity:0.65;width:100%;"> 
+                        <div class="waitingHolder" style="width: 91px;">
+                            <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                            <span class="waitingDescription">Please Wait...</span>
+                        </div>
+                    </div>
+                </apex:facet>
+            </apex:actionstatus>
+       </apex:outputpanel>
+	  <div id="backgroundDiv" style="width:100%;">
+		<apex:pageBlock title="" id="pageBlock" mode="edit" > 
+		<apex:pageMessages id="message"/>
+		<br/>
+		<apex:outputLabel value="Category" style="font-weight:bold;padding-left: 20px;" />&nbsp;&nbsp;&nbsp;
+		<apex:selectList id="slctType" size="1" value="{!selectedSObject}" onchange="fetchDataForSelectedType(); return false;">
+			<apex:selectOptions value="{!lstTypes}"/>
+		</apex:selectList>
+		<br/>
+         <br/>
+         <apex:outputPanel id="pnlProblem" rendered="{!IF(selectedSObject == 'Problem_Category__c', true, false)}">
+			<table width="100%" border="0" cellpadding="0" cellspacing="0">
+				<tr>
+					<td style="width : 50%;vertical-align:top;padding-top: 1px;padding-right: 25px;padding-left: 5px;">
+					<div id="firstDiv"> 
+					 <div class="pbSubheader brandTertiaryBgr first tertiaryPalette">
+				       <h3>Problem</h3>
+				       <div style="float: right;">
+					       <apex:commandLink value="Add Main" styleClass="pgbButton" onclick="problemOperation('sibling', 'Problem', true); return false;" />
+					       <apex:commandLink value="Add Child" styleClass="pgbButton" onclick="problemOperation('child', 'Problem', false); return false;" />
+					       <apex:commandLink value="Edit" styleClass="pgbButton" onclick="problemOperation('edit', 'Problem', false); return false;" />
+					       <apex:commandLink value="Delete" styleClass="pgbButton" onclick="deleteProblem('delete', 'Problem'); return false;" />
+					   </div>
+					 </div> 
+					  
+					 <c:TreeViewForManualCreation SelectedNode="{!selectedProblemCategoryId}" ObjectNameValue="{!selectedSObject}" SelectedCategoryValue="all" forPage="CategoryMaintainance" counter="1" selectItemCallback="fetchSolutions"/>
+					</div> 
+				     </td>
+			    	<td style="width : 50%;vertical-align:top;padding-right: 5px;">
+				    <apex:outputPanel id="solutions" >
+				    	<apex:outputPanel rendered="{!isLeafNode}">
+				    	 <div style="margin-top:-15px;" id="secondDiv"> 
+					        <div class="pbSubheader brandTertiaryBgr first tertiaryPalette">
+						       <h3>Solutions</h3>
+						       <div style="float: right;">
+							       <apex:commandLink value="Add" styleClass="pgbButton" onclick="addNewSolution('Problem'); return false;"/>
+							   </div>
+							</div> 
+							
+							<apex:pageBlockTable value="{!solutionCatList}" var="item"> 
+							    <apex:column headerValue="Action">
+								  <apex:commandLink value="Remove" onclick="deleteJunction('{!item.Id}'); return false;" status="status"/>
+								</apex:column>
+								<apex:column value="{!item.Solution_Category__r.name}"/>
+							</apex:pageBlockTable>	
+				    	</div>
+				    	</apex:outputPanel>
+				    </apex:outputPanel>
+					</td>
+				</tr></table>
+				<script>
+					jQuery.noConflict();
+					j$('#tree1').css('overflow','auto');
+					j$('#tree1').css('height','400px');
+					j$('#firstDiv').css('margin-top','-17px');
+					j$('.pbSubsection').css('width','100%');
+					j$('.pgbButton').css('margin','5px');
+					j$('#secondDiv .pbSubsection').css('overflow','auto');
+					j$('#secondDiv .pbSubsection').css('height','400px');
+					j$('#secondDiv').css('margin-top','-16px');
+				</script>
+			</apex:outputPanel>
+			
+			<apex:outputPanel id="pnlSolutions" rendered="{!IF(selectedSObject == 'Solution_Category__c', true, false)}">
+			<table width="100%" border="0" cellpadding="0" cellspacing="0">
+				<tr>
+					<td style="width : 50%;vertical-align:top;padding-top: 1px;padding-right: 25px;padding-left: 5px;">
+					<div id="firstDiv"> 
+					 <div class="pbSubheader brandTertiaryBgr first tertiaryPalette">
+				       <h3>Solutions</h3>
+				       <div style="float: right;">
+					       <apex:commandLink style="margin:5px;" value="Add Main" styleClass="pgbButton" onclick="problemOperation('sibling', 'Solution', true);return false; return false;" />
+					       <apex:commandLink style="margin:5px;" value="Edit" styleClass="pgbButton" onclick=" problemOperation('edit', 'Solution', false);return false;" />
+					       <apex:commandLink style="margin:5px;" value="Delete" styleClass="pgbButton" onclick="deleteProblem('delete', 'Solution');return false;" />
+					   </div>
+					 </div>  
+					  
+					 <c:TreeViewForManualCreation SelectedNode="{!selectedSolutionCategoryId}" ObjectNameValue="{!selectedSObject}" SelectedCategoryValue="all" forPage="CategoryMaintainance" counter="2" hiddenFieldName="pg:frm:solutionCategoryId"/>
+					</div> 
+				     </td>
+			    	<td style="width : 50%;vertical-align:top;padding-right: 5px;">
+<!--				    	<apex:outputPanel id="Problem" >-->
+<!--					    	<apex:outputPanel rendered="{!isLeafNodeForSolutions}">-->
+<!--					    	 <div id="secondDiv"> -->
+<!--						        <div class="pbSubheader brandTertiaryBgr first tertiaryPalette">-->
+<!--							       <h3>Problem</h3>-->
+<!--							       <div style="float: right;">-->
+<!--								       <apex:commandLink value="Add" styleClass="pgbButton" onclick="addNewSolution('Problem');return false;"/>-->
+<!--								   </div>-->
+<!--								</div> -->
+<!--								-->
+<!--								<apex:pageBlockTable value="{!lstProblemCategory}" var="item"> -->
+<!--								    <apex:column headerValue="Action">-->
+<!--									  <apex:commandLink value="Remove" onclick="deleteJunction('{!item.Id}'); return false;" status="status"/>-->
+<!--									</apex:column>-->
+<!--									<apex:column value="{!item.Problem_category__r.name}"/>-->
+<!--								</apex:pageBlockTable>	-->
+<!--					    	</div>-->
+<!--					    	</apex:outputPanel>-->
+<!--				    	</apex:outputPanel>-->
+					</td>
+				</tr></table>
+			</apex:outputPanel>
+			
+			
+			<apex:outputPanel id="pnlProduct" rendered="{!IF(selectedSObject == 'Support_Product__c', true, false)}">
+			<table width="100%" border="0" cellpadding="0" cellspacing="0">
+				<tr>
+					<td style="width : 50%;vertical-align:top;padding-top: 1px;padding-right: 25px;padding-left: 5px;">
+					<div id="firstDiv"> 
+					 <div class="pbSubheader brandTertiaryBgr first tertiaryPalette">
+				       <h3>Support Product</h3>
+				       <div style="float: right;">
+					       <apex:commandLink style="margin:5px;" value="Add Main" styleClass="pgbButton" onclick="problemOperation('sibling', 'Product', true); return false;" />
+					       <apex:commandLink style="margin:5px;" value="Add Child" styleClass="pgbButton" onclick="problemOperation('child', 'Product', false); return false;" />
+					       <apex:commandLink style="margin:5px;" value="Edit" styleClass="pgbButton" onclick="problemOperation('edit', 'Product', false); return false;" />
+					       <apex:commandLink style="margin:5px;" value="Delete" styleClass="pgbButton" onclick="deleteProblem('delete', 'Product'); return false;" />
+					   </div>
+					 </div> 
+					  <apex:outputPanel id="productsOutputPanel">
+					 	<c:TreeViewForManualCreation SelectedNode="{!selectedProductCategoryId}" ObjectNameValue="{!selectedSObject}" SelectedCategoryValue="all" forPage="CategoryMaintainance" counter="6" selectItemCallback="fetchTranslations"/>
+					 </apex:outputPanel>
+					</div> 
+				     </td>
+			    	<td style="width : 50%;vertical-align:top;padding-right: 5px;">
+				    <apex:outputPanel id="products" >
+				    	<apex:outputPanel rendered="{!selectedProductCategoryId != null}">
+				    	 <div id="trnslationDiv"> 
+					        <div class="pbSubheader brandTertiaryBgr first tertiaryPalette">
+						       <h3>Translations</h3>
+						       <div style="float: right;">
+							       <apex:commandLink style="margin:5px;" value="Add" styleClass="pgbButton" action="{!initialiseTranslation}" rerender="translation" status="status" oncomplete="showLightBox('light3','fade3');"/>
+							   </div>
+							</div> 
+							<apex:pageBlockTable value="{!listTranslations}" var="item"> 
+							    <apex:column headerValue="Action" style="width: 100px;">
+								  <apex:commandLink value="Remove" onclick="deleteTranslation('{!item.Id}'); return false;" status="status"/>&nbsp;&nbsp;&nbsp;
+								  <apex:commandLink value="Edit" onclick="editTranslationAction('{!item.Id}'); return false;" />
+								</apex:column>
+								<apex:column value="{!item.Language__c}"/>
+								<apex:column value="{!item.Name}"/>
+							</apex:pageBlockTable>	
+				    	</div>
+				    	</apex:outputPanel>
+				    </apex:outputPanel>
+					</td> 
+				</tr></table>
+				<script>
+					
+				</script>
+			</apex:outputPanel>
+			
+	     </apex:pageBlock>
+		</div>
+		
+		
+		<apex:outputPanel id="treeView" styleClass="treeView">
+			    <div id="light" class="white_content" style="width=40%;display:none;">
+				<apex:pageBlock id="pbOppBlock"> 
+			      		<apex:pageBlockButtons location="bottom">
+			      			<apex:commandButton value="Save" action="{!fetchData}" rerender="pbOppBlock" status="mystatus" oncomplete="addCategoriesScript();"/>
+			             	<apex:commandButton value="Cancel" onclick="hideLightBox('light','fade', false); return false;" />
+			      		</apex:pageBlockButtons>
+			           	<apex:outputpanel >
+					            <apex:actionstatus id="mystatus">
+					                <apex:facet name="start">
+					                    <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;
+					                           height: 100%;opacity:0.65;width:100%;"> 
+					                        <div class="waitingHolder" style="width: 91px;">
+					                            <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+					                            <span class="waitingDescription">Please Wait...</span>
+					                        </div>
+					                    </div>
+					                </apex:facet>
+					            </apex:actionstatus>
+					       </apex:outputpanel>
+			           <apex:pageblockSection id="pbSubSection" collapsible="false" columns="1" title="Enter Category">
+			                <apex:pageblockSectionItem >
+					             <apex:outputLabel value="Parent" />   
+						         <apex:outputLabel value="{!parentCategory}" />  
+							 </apex:pageblockSectionItem>
+								<apex:inputField value="{!sObjectToBind['Name']}" label="Target Value"/>
+								<apex:inputField value="{!sObjectToBind['Description__c']}" rendered="{!IF(selectedSObject == 'Support_Product__c', true, false)}" styleClass="Description"/>
+								<apex:inputField value="{!sObjectToBind['Rank__C']}"  styleClass="rankClass" label="Sort Order"/>
+								<apex:inputField value="{!sObjectToBind['Agent_Visible__C']}"/>
+					   </apex:pageblockSection>
+					   <div class="BtnComd">
+					   		<apex:commandButton value="Lookup Product" action="{!fetchMatchingProducts}" rerender="pbOppBlock" status="mystatus" style="float: right;margin-right: 50px;"></apex:commandButton>
+					   </div>
+			             <br/> 
+			             <br/>
+			             <script>
+			             	jQuery('.Description').parent().append(jQuery(".BtnComd").html());
+			             	jQuery(".BtnComd").hide();
+			             </script>
+			             <apex:pageBlockSection id="showOppSection">
+				            <apex:outputPanel id="addRows" rendered="{!IF(selectedDMLType == 'child' || selectedDMLType == 'sibling', true, false)}" style="width:100%;">	 
+				            	 <apex:outputLabel value="Add Number of Rows" style="color: #4a4a56;font-weight: bold;margin-left: -9px;"/>
+					    		 <apex:inputText id="rows" value="{!numberOfRowsToAdd}" style="width: 30px;font-weight: bold;margin-left: 20px;" onKeyPress="return isNumber(event, true);"/>&nbsp;&nbsp;
+					    		 <apex:commandLink action="{!initialiseRows}" value="Add" id="theCommandLink" rerender="pbOppBlock" status="mystatus"/>
+					    	</apex:outputPanel>
+					    	<br/>
+					    		<apex:variable var="item2" value="{!1}" />
+					    		<div style="float:left;">
+<!--					    			<apex:repeat value="{!additionalSobjrows}" var="row" >  -->
+<!--						               <apex:pageblockSectionItem rendered="{!IF(selectedDMLType == 'child', true, false)}">-->
+<!--								    	  <apex:outputLabel value="Child {!FLOOR(item1)}" />-->
+<!--								    	  <apex:inputText value="{!row['Name']}" /> -->
+<!--								       </apex:pageblockSectionItem>-->
+<!--								       <apex:pageblockSectionItem rendered="{!IF(selectedDMLType == 'sibling', true, false)}">-->
+<!--								    	  <apex:outputLabel value="Sibling {!FLOOR(item1)}" />-->
+<!--								    	  <apex:inputText value="{!row['Name']}" /> -->
+<!--								       </apex:pageblockSectionItem> -->
+<!--								    	<apex:variable var="item1" value="{!item1+1}" />-->
+<!--						           </apex:repeat>-->
+						           <apex:pageBlockTable value="{!additionalSobjrows}" var="itemVar" rendered="{!additionalSobjrows.size > 0}" style="width:110%;">
+										<apex:column value="Sibling {!FLOOR(item2)}" headerValue="Sibling" style="font-weight:bold;"/>
+										<apex:column headerValue="Name">
+											<apex:inputField value="{!itemVar['Name']}" /> 
+										</apex:column>
+										<apex:column headerValue="Rank">
+											<apex:inputField value="{!itemVar['Rank__C']}"  styleClass="rankClass"/> 
+										</apex:column>
+										<apex:column headerValue="Agent Visible">
+											<apex:inputField value="{!itemVar['Agent_Visible__C']}" /> 
+											<apex:variable var="item2" value="{!item2+1}" />
+										</apex:column>
+									</apex:pageBlockTable>
+						          
+						     </div>
+			             <br/>
+			             <style>
+			             	#secondDiv{margin-top: 0px;}
+			             </style>
+			      </apex:pageBlockSection> 
+			    </apex:pageBlock>
+			    </div>
+			</apex:outputPanel>
+    <div id="fade" class="black_overlay"></div> 
+	   
+	   <apex:outputPanel id="treeView2" styleClass="treeView" >
+	         <div id="light2" class="white_content" style="width=30%;display:none;">
+			    <apex:outputPanel id="solOppBlock" rendered="{!showSolOperationBlock}" >
+				<apex:pageBlock id="solPbOppBlock" > 
+				   <apex:pageBlockSection columns="1" title="Add a new Solution" rendered="{!IF(selectedSObject == 'Problem_Category__c', true, false)}">
+					<c:TreeViewForManualCreation ObjectNameValue="Solution_Category__c" SelectedCategoryValue="all" hiddenFieldName="pg:frm:solutionSelectedIds" forPage="AssetAssociation" counter="3" removeIds="{!solutionCatIds}"/>
+				   </apex:pageBlockSection>
+				   <apex:pageBlockButtons location="bottom">
+				      <apex:commandButton value="Save" onclick="saveNewSolution(); return false;" />
+				      <apex:commandButton value="Cancel" onclick="hideLightBox('light2','fade2', true); return false;" />
+				   </apex:pageBlockButtons>
+				</apex:pageBlock>
+				</apex:outputPanel>
+	        </div>
+	   </apex:outputPanel>
+	   <div id="fade2" class="black_overlay"></div>
+	   
+	   <apex:outputPanel id="translation" styleClass="translation" >
+	         <div id="light3" class="white_content" style="width=30%;display:none;">
+			    <apex:outputPanel id="transLationBlock">
+				<apex:pageBlock id="transLationBlockPb" >
+					<apex:outputpanel >
+					            <apex:actionstatus id="mystatus2">
+					                <apex:facet name="start">
+					                    <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;
+					                           height: 100%;opacity:0.65;width:100%;"> 
+					                        <div class="waitingHolder" style="width: 91px;">
+					                            <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+					                            <span class="waitingDescription">Please Wait...</span>
+					                        </div>
+					                    </div>
+					                </apex:facet>
+					            </apex:actionstatus>
+					       </apex:outputpanel>
+					<br/> 
+				   <apex:outputText value="Source Value" style="font-weight:bold"/> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				   <apex:outputText value="{!sourceSupportProduct}" style="font-weight:bold"/>
+				   <br/> <br/><br/>  
+				   <apex:pageBlockSection columns="2" title="Translation">
+				   		<apex:inputField value="{!translation.Language__c}" />
+				   		<apex:inputField value="{!translation.Name}" label="Target Value"/>
+				   </apex:pageBlockSection>
+				   <apex:pageBlockButtons location="bottom">
+				      <apex:commandButton value="Save" action="{!saveTranslation}" rerender="frm" status="mystatus2"/>
+				      <apex:commandButton value="Cancel" onclick="hideLightBox('light3','fade3', false); return false;" />
+				   </apex:pageBlockButtons>  
+				</apex:pageBlock>
+				</apex:outputPanel>
+	        </div>
+	   </apex:outputPanel>
+	   <div id="fade3" class="black_overlay"></div>
+			<script>
+				
+				
+				function deleteTranslation(itemId){
+					if(confirm('Are you surely wanted to delete the selected translation?')){
+						deleteTranslationAction(itemId);
+					}
+				}
+				
+				function problemOperation(from, fromType, isAddMain){
+					var producId = document.getElementById("pg:frm:problemCategoryId").value;
+					var msg = 'Please select a Problem.';
+					var isFirstRecord = {!isProblemObjEmpty};
+					if(fromType == 'Solution'){
+						producId = document.getElementById("pg:frm:solutionCategoryId").value;
+						msg = 'Please select a Solution.';
+						isFirstRecord = {!isSolutionObjEmpty};
+					}else if(fromType == 'Product'){
+						producId = document.getElementById("pg:frm:productCategoryId").value;
+						msg = 'Please select a Support Product.';
+					}
+					if(producId != '' || (isAddMain && isFirstRecord)){
+					    processDMLOperationAction(from);
+					}else{
+						if(from == 'child'){
+							alert('Please select a Parent first to add a Child.');
+						}else{
+							alert(msg);
+						}
+						return false;
+					}
+				}
+				
+				
+				function isNumber(evt, isFromAddRows) {
+					if(isFromAddRows){
+						if(document.getElementById('pg:frm:pbOppBlock:showOppSection:rows').value.length > 1){
+							return false;
+						}
+					}
+				    evt = (evt) ? evt : window.event;
+				    var charCode = (evt.which) ? evt.which : evt.keyCode;
+				    if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+				        return false;
+				    }
+				    return true;
+				}
+				
+				function deleteProblem(operation, fromType){
+				   var producId = document.getElementById("pg:frm:problemCategoryId").value;
+					var msg = 'Please select a Problem.';
+					if(fromType == 'Solution'){
+						producId = document.getElementById("pg:frm:solutionCategoryId").value;
+						msg = 'Please select a Solution.';
+					}else if(fromType == 'Product'){
+						producId = document.getElementById("pg:frm:productCategoryId").value;
+						msg = 'Please select a Support Product.';
+					}
+					if(producId != ''){
+					     if(confirm('Are you surely wanted to delete the selected problem?')){
+								delCategoriesAction(operation);
+						 }
+					}else{
+						alert(msg);
+						return false;
+					}
+				}
+				
+				
+				function addNewSolution(fromType){
+				  var producId = document.getElementById("pg:frm:problemCategoryId").value;
+					var msg = 'Please select a Problem.';
+					if(fromType == 'Solution'){
+						producId = document.getElementById("pg:frm:solutionCategoryId").value;
+						msg = 'Please select a Solution.';
+					}
+				  if(producId != ''){
+				  	  showAddSolutionPanel();
+				  }else{
+					 alert(msg);
+					 return false; 
+				  }
+				}
+				
+				function showLightBox(lightDiv, fadeDiv) {
+			        document.getElementById(lightDiv).style.display = 'block';
+			        document.getElementById(fadeDiv).style.display = 'block';
+			    }
+			    function hideLightBox(lightDiv, fadeDiv, isActionFunctionNeeded) {
+			    	document.getElementById(lightDiv).style.display = 'none';
+			        document.getElementById(fadeDiv).style.display = 'none';
+			    	if(isActionFunctionNeeded){
+			    		hideLightBoxAction();
+			    	}
+			    }
+			    
+			    function deleteJunction(objId){
+				    if(confirm('Are you surely wanted to delete the selected problem?')){
+						deleteProblemSolutionJunction(objId);
+					}
+				}
+				
+				function addCategoriesScript(){
+					var flag = false;
+					jQuery('.treeView').find('.rankClass').each( function() {
+			            if (jQuery(this).next('div').hasClass('errorMsg')) {
+			            	flag = true;
+			            }
+			        });
+			        if(!flag){
+			        	hideLightBox('light','fade', false);
+			        	addCategoriesAction();
+			        }
+				}
+				
+			  </script>
+		  
+	</apex:form>
+	<style>
+	   .popUpBlock{
+	      position: fixed;
+		  width: 50%;
+		  margin-left: 115px;
+	   }
+	   .black_overlay{
+            display: none;
+            position: absolute;
+            top: 0%;
+            left: 0%;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            z-index:100;
+            -moz-opacity: 0.8;
+            opacity:.80;
+            filter: alpha(opacity=80);
+        }
+        .white_content {
+            display: none;
+            position: absolute;
+            top: 10%;
+            left:30%;
+            width: 35%;
+            height: auto;           
+            background-color: white;
+            z-index:101;
+           resize:both;
+        }
+	</style>
+</apex:page>

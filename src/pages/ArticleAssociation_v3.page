@@ -1,0 +1,273 @@
+<apex:page controller="ArticleAssociation_v3Controller" id="pg">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+<apex:form id="form">
+    <apex:inputHidden id="productSelectedids" value="{!selectedProductIds}"/>
+    <apex:inputHidden id="problemSelectedids" value="{!selectedProblemIds}"/>
+    <apex:actionfunction name="fetListOfArticlesAssociatedAction" action="{!fetListOfArticlesAssociated}" rerender="form" Status="statusC"/>
+    <apex:actionfunction name="searchParticularArticleAssociated" action="{!fetListOfArticlesAssociatedForSearch}" rerender="form" Status="statusC"/>
+    <apex:actionfunction name="openTreeView" action="{!openTreeViewAction}" Status="statusC" oncomplete="showLightBox();return false;" rerender="form">
+        <apex:param name="treeViewMode" value="" assignTo="{!selectedTreeView}"/>
+        <apex:param name="articleId" value="" assignTo="{!selectedKnowledgeArticleId}"/>
+        <apex:param name="articleTitle" value="" assignTo="{!selectedKnowledgeArticleTitle}"/> 
+        <apex:param name="fourthParam" value="" assignTo="{!selectedArticleIndex}"/>
+        <apex:param name="fifthParam" value="" assignTo="{!selectedArticleVersionId}"/> 
+    </apex:actionfunction>
+    <apex:actionfunction name="openProd2List" action="{!openProduct2List}" Status="statusC" oncomplete="showLightBox();return false;" rerender="form">
+        <apex:param name="treeViewMode" value="" assignTo="{!selectedTreeView}"/>
+        <apex:param name="articleId" value="" assignTo="{!selectedKnowledgeArticleId}"/>
+        <apex:param name="articleTitle" value="" assignTo="{!selectedKnowledgeArticleTitle}"/>
+        <apex:param name="fourthParam" value="" assignTo="{!selectedArticleIndex}"/>
+        <apex:param name="fifthParam" value="" assignTo="{!selectedArticleVersionId}"/>  
+    </apex:actionfunction>
+    <apex:outputpanel >
+             <apex:actionstatus id="statusC">
+               <apex:facet name="start">
+                 <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb; 
+                        height: 100%;opacity:0.65;width:100%;"> 
+                    <div class="waitingHolder" style="top: 100px; width: 100px;">
+                        <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                        <span class="waitingDescription">Please Wait...</span>
+                    </div>
+                 </div>
+               </apex:facet>
+             </apex:actionstatus>
+       </apex:outputpanel>
+    <br/>
+    <apex:pageBlock title="Knowledge Article Maintainance" id="pgblk">
+        <apex:pageMessages />
+        <apex:outputPanel id="treeView" styleClass="treeView">
+                <div id="light" class="white_content" style="width=30%;display:none;">
+                        <apex:outputpanel >
+                             <apex:actionstatus id="statusD">
+                               <apex:facet name="start">
+                                 <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb; 
+                                        height: 100%;opacity:0.65;width:100%;"> 
+                                    <div class="waitingHolder" style="top: 100px; width: 100px;">
+                                        <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                                        <span class="waitingDescription">Please Wait...</span>
+                                    </div>
+                                 </div>
+                               </apex:facet>
+                             </apex:actionstatus>
+                       </apex:outputpanel>
+                       <apex:outputpanel rendered="{!forTreeView}">
+                        <apex:pageBlock title="" id="pageBlock" mode="edit"> 
+                            <apex:pageBlockButtons location="bottom">
+                                <apex:commandButton value="Save"  action="{!createArticle}" rerender="form" status="statusD"/>
+                                <apex:commandButton value="Cancel" onclick="hideLightBox(); return false;"/>
+                            </apex:pageBlockButtons>
+                            <apex:pageblockSection columns="1" title="Problem Categories" id="innerSectionProducts" rendered="{!!forProductTreeView}">
+                              <apex:outputPanel style="height:400px;overflow:auto;">
+                                <c:TreeViewForManualCreation SelectedNode="{!selectedProblemIds}" ObjectNameValue="Problem_Category__c" SelectedCategoryValue="all"  hiddenFieldName="pg:form:problemSelectedids" forPage="AssetAssociation" counter="2" />                 
+                             </apex:outputPanel>
+                             </apex:pageblockSection>
+                             <apex:pageblockSection columns="1" title="Support Products" id="innerSectionProblems" rendered="{!forProductTreeView}">
+                               <apex:outputPanel style="height:400px;overflow:auto;">
+                                    <c:TreeViewForManualCreation SelectedNode="{!selectedProductIds}" ObjectNameValue="Support_Product__c" SelectedCategoryValue="all" hiddenFieldName="pg:form:productSelectedids" forPage="AssetAssociation" counter="1"/>
+                                </apex:outputPanel>                   
+                             </apex:pageblockSection>
+                        </apex:pageBlock>
+                       </apex:outputpanel>
+                       <apex:outputpanel rendered="{!NOT(forTreeView)}">
+                        <apex:pageBlock rendered="{!IF(product2ListForDisplay.size > 0,true,false)}">
+                            <apex:pageBlockButtons location="bottom">
+                                <apex:commandButton value="Save"  action="{!createArticleCategoryForProduct2}" rerender="form" status="statusD"/>
+                                <apex:commandButton value="Cancel" onclick="hideLightBox(); return false;"/>
+                            </apex:pageBlockButtons>
+                            <apex:pageBlockTable value="{!product2ListForDisplay}" var="prod" id="table">
+                                <apex:column >
+                                    <apex:inputCheckbox value="{!prod.selected}"/>
+                                </apex:column>
+                                <apex:column value="{!prod.prod2.Name}" />
+                                <apex:column value="{!prod.prod2.Part_Number__c}" />
+                            </apex:pageBlockTable>
+                        </apex:pageBlock>
+                        <apex:outputPanel style="height:400px;overflow:auto;margin-top:100px;text-align:center;font-size:14px;" layout="block" rendered="{!IF(product2ListForDisplay.size > 0,false,true)}">
+                            No associated Products records to display.<br/><br/>
+                            <apex:commandButton value="Cancel" onclick="hideLightBox(); return false;"/>
+                        </apex:outputPanel>
+                       </apex:outputpanel>
+                                
+                </div>
+            </apex:outputPanel>
+    <div id="fade" class="black_overlay"></div>
+    <br/>
+        <table width="80%"> 
+        <tr>
+                        <td style="width:40%;">
+                            <apex:outputLabel value="Article Type" style="font-weight:bold;"/>&nbsp;&nbsp;
+                            <apex:selectList id="slctSrtType" size="1" value="{!articleTypeAssociated}"  onchange="onchangeActionAssociated()"  style="width:80%"> 
+                                <apex:selectOptions value="{!articleTypes}"/>
+                            </apex:selectList>
+                        </td>
+                        <td style="width:160px;">
+                            <apex:outputLabel value="Status" style="font-weight:bold;"/>&nbsp;&nbsp;
+                            <apex:selectList id="status" size="1" value="{!selectedStatus}"  onchange="onchangeActionAssociated()"  style="width:60%"> 
+                                <apex:selectOptions value="{!ArticleStatus}"/>
+                            </apex:selectList>
+                        </td>
+                        <td style="padding-left:30px;">
+                          <apex:selectlist value="{!selectedField}" multiselect="false" size="1">
+                            <apex:selectOption itemValue="Title" itemLabel="Name"/>
+                            <apex:selectOption itemValue="Language" itemLabel="Language"/>
+                            <apex:selectOption itemValue="ArticleNumber" itemLabel="Article Number"/>
+                            <apex:selectOption itemValue="CreatedBy.Name" itemLabel="CreatedBy"/>
+                            <apex:actionSupport event="onchange" reRender="form" action="{!checkForLanguageAction}"  status="statusC" /> 
+                        </apex:selectlist>
+                           <apex:inputText value="{!searchTextAssociated}" rendered="{!!isLangauge}"/>&nbsp;
+                          <apex:selectList id="languages" value="{!selectedLanguage}" size="1" rendered="{!isLangauge}">
+                            <apex:selectOptions value="{!languages}"/>
+                          </apex:selectList>&nbsp;
+                          <input Type="button" value="Search" onclick="searchArticleAssociated()" class="btn"/> 
+                        </td>
+                        </tr>
+                        
+                        
+            </table>
+            <br/>
+             <apex:pageMessage summary="Search Results are filtered by Article Status." severity="info" strength="3" />
+            <br/>
+            <div style="height:500px; overflow:auto; width:100%;">  
+                <apex:variable var="index" value="{!0}" />
+                <apex:pageblocktable value="{!listOfWrapperArticle}" var="article" id="pbTable">
+                    <apex:column headervalue="Article Name" style="width:30%">
+<!--                      <apex:outputField value="{!article.knowledgeArticleVersion.KnowledgeArticleId}"/>-->
+                      <a href="/{!article.knowledgeArticleVersion.KnowledgeArticleId}" target="_blank">{!article.knowledgeArticleVersion.Title}</a>
+                   </apex:column>
+                   <apex:column headervalue="Article Number" >
+                      <apex:outputField value="{!article.knowledgeArticleVersion.ArticleNumber}"/>
+                   </apex:column>
+                  
+                   <apex:column headervalue="Language" >
+                      <apex:outputField value="{!article.knowledgeArticleVersion.Language}"/>
+                   </apex:column>
+                    <apex:column headervalue="Version" >
+                      <apex:outputField value="{!article.knowledgeArticleVersion.VersionNumber}"/>
+                   </apex:column>
+                    <apex:column headervalue="Publishing Status" >
+                      <apex:outputField value="{!article.knowledgeArticleVersion.PublishStatus}"/>
+                   </apex:column>
+                    <apex:column headervalue="Created By" >
+                      <apex:outputField value="{!article.knowledgeArticleVersion.createdById}"/> 
+                   </apex:column>
+                   <apex:column headervalue="Support Products" style="width:15%">
+                      <apex:outputText value="">{!article.productCategories}&nbsp;&nbsp;<apex:outputLink onclick="openTreeView('Product', '{!article.knowledgeArticleVersion.KnowledgeArticleId}', '{!article.knowledgeArticleTitle}', {!index}, '{!article.knowledgeArticleVersion.ID}'); return false;" >Edit</apex:outputLink></apex:outputText>
+                   </apex:column>
+                   <apex:column headervalue="Product" style="width:10%">
+                      <apex:outputText value="">{!article.products}&nbsp;&nbsp;<apex:outputLink onclick="openProd2List('None','{!article.knowledgeArticleVersion.KnowledgeArticleId}', '{!article.knowledgeArticleTitle}', {!index},  '{!article.knowledgeArticleVersion.ID}'); return false;" >Edit</apex:outputLink></apex:outputText>
+                    </apex:column>
+                    <apex:column headervalue="Problem Categories" style="width:10%">
+                      <apex:outputText value="">{!article.problemCategories}&nbsp;&nbsp;<apex:outputLink onclick="openTreeView('Problem', '{!article.knowledgeArticleVersion.KnowledgeArticleId}', '{!article.knowledgeArticleTitle}', {!index},  '{!article.knowledgeArticleVersion.ID}'); return false;" >Edit</apex:outputLink></apex:outputText>
+                      <apex:variable var="index" value="{!index+1}" />
+                   </apex:column>
+                   
+               </apex:pageblocktable>
+           </div>
+           <apex:actionFunction name="renderRecords" reRender="pgblk" action="{!renderNewRecords}" status="statusC" />
+    <div align="right" style="display:{!IF(NOT(ISNULL(listOfWrapperArticle)),'block','none')}">
+    
+<!--         <font size="1pt">List per Page&nbsp;&nbsp;&nbsp;</font> -->
+<!--         <apex:selectList size="1" value="{!selectedReocrdSizeInPage}" styleClass="pageText" id="numOfRecordsList" onchange="renderRecords();return false;"> -->
+<!--             <apex:selectOptions value="{!numberOfRecordsInPage}"/> -->
+<!--       </apex:selectList> -->
+    
+        <font size="1pt">Page #:&nbsp;<apex:outputLabel id="PageNumber" value="{!PageNumber}"/>&nbsp;of&nbsp;<apex:outputLabel id="totalPage" value="{!totalPageNumber}"/>&nbsp;&nbsp;&nbsp;&nbsp;</font>
+    <apex:inputText value="{!gotoPage}" style="width:30px;" id="gotoPage"/>
+        <input type="button" onclick="jumpPageCheck();" value="Jump"/>        
+        <apex:actionFunction name="jumpBtnClick" action="{!jumpBtnClick}" reRender="pgblk" status="statusC" />
+        <apex:commandButton action="{!firstPageBtnClick}" disabled="{!FirstButtonEnabled}" reRender="pgblk" status="statusC" value="First Page"></apex:commandButton>
+        
+        <apex:commandButton action="{!previousBtnClick}" disabled="{!previousButtonEnabled}" reRender="pgblk" status="statusC" value="Previous"></apex:commandButton>
+        <apex:commandButton action="{!nextBtnClick}" reRender="pgblk" disabled="{!nextButtonDisabled}" status="statusC" value="Next"></apex:commandButton>
+        <apex:commandButton action="{!lastPageBtnClick}" disabled="{!LastButtonEnabled}" reRender="pgblk" status="statusC" value="Last Page"></apex:commandButton>
+    </div>
+    <br/>
+     </apex:pageBlock>
+</apex:form>
+<style>
+        .black_overlay{
+            display: none;
+            position: absolute;
+            top: 0%;
+            left: 0%;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            z-index:100;
+            -moz-opacity: 0.8;
+            opacity:.80;
+            filter: alpha(opacity=80);
+        }
+        .white_content {
+            display: none;
+            position: absolute;
+            top: 10%;
+            left:30%;
+            width: 35%;
+            height: 255px;           
+            background-color: white;
+            z-index:101;
+           resize:both;
+        }
+        .white_content2 {
+            display: none;
+            position: absolute;
+            top: 10%;
+            left:4.5%;
+            width: 92%;
+            height:82%;            
+            background-color: white;
+            z-index:1002;
+           resize:both;
+        }
+    </style>
+<script>
+
+    function jumpPageCheck()
+    {
+        var totalPage = parseInt(document.getElementById("pg:form:pgblk:totalPage").innerHTML);
+        var jumpPageNo=parseInt(document.getElementById("pg:form:pgblk:gotoPage").value);
+        var PageNumber=parseInt(document.getElementById("pg:form:pgblk:PageNumber").innerHTML);
+        if(PageNumber!=jumpPageNo)
+        {
+            if(totalPage>=jumpPageNo && jumpPageNo!=0)
+            {
+                jumpBtnClick();
+            }
+            else
+            {
+                alert("Alert : Incorrect page No.");
+            }
+        }
+    }
+    function onchangeActionAssociated(){ 
+        fetListOfArticlesAssociatedAction();
+    }
+    function associateArticle(){
+        isSelectedAtLeastOne = false;
+        jQuery('input:checkbox.radioClass').each(function () {
+           if(this.checked){
+               isSelectedAtLeastOne = true;
+           }
+        });
+        if(isSelectedAtLeastOne){
+            createArtcleCategory();
+        }else{
+            alert("Please select atleast one article");
+        }     
+    }
+    function searchArticleAssociated(){
+       searchParticularArticleAssociated();
+    }
+    function showLightBox() {
+        document.getElementById('light').style.display = 'block';
+        document.getElementById('fade').style.display = 'block';
+    }
+    function hideLightBox() {
+        document.getElementById('light').style.display = 'none';
+        document.getElementById('fade').style.display = 'none';
+    }
+    
+    </script>
+</apex:page>
