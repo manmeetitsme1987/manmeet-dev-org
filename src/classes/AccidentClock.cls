@@ -88,7 +88,7 @@ public with sharing class AccidentClock {
         Integer tempMinutes = minutes.intValue() - hours.intValue()*60;
         m1 = tempMinutes / 10;
         m2 = math.mod(tempMinutes,10);        
-        return tempMinutes; 
+        return tempMinutes;  
 
     }                   
  
